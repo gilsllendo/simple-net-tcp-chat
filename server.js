@@ -4,6 +4,14 @@ const options = require("./settings.js");
 // Pool for clients
 let sockets = [];
 
+// Commands
+const commands = {
+  name(client, name) {
+    name = name.toString().split(" ")[1];
+    const index = sockets.indexOf(client);
+    sockets[index].name = name;
+  }
+}
 
 // Broadcasting
 const broadcast = (client, data) => {
@@ -16,12 +24,6 @@ const broadcast = (client, data) => {
 // Remove disconnected client
 const removeClient = (client) => {
   sockets = sockets.filter((el) => el === client);
-}
-
-// Settings custom names
-const setClientName = (client, name) => {
-  const index = sockets.indexOf(client);
-  sockets[index].name = name;
 }
 
 // Setting quick names
@@ -40,8 +42,9 @@ const server = net.createServer((socket) => {
 
   // Data handler
   socket.on("data", (data) => {
-    if (data.toString().slice(0, 6) === ".name ") {
-      setClientName(socket, data.toString().slice(6));
+    if (data.toString()[0] === ".") {
+      const command = commands[data.toString().slice(1).match(/^([\w\-]+)/gi)];
+      if (command) command(socket, data);
       return;
     }
 
